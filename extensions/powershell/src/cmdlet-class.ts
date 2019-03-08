@@ -29,7 +29,7 @@ export class CmdletClass extends Class {
 
   constructor(namespace: Namespace, operation: command.CommandOperation, state: State, objectInitializer?: Partial<CmdletClass>) {
     // generate the 'variant'  part of the name
-    const variantName = `${state.model.details.csharp.nounPrefix}${operation.details.csharp.name ? `${operation.details.csharp.noun}_${operation.details.csharp.name}` : operation.details.csharp.noun}`;
+    const variantName = `${operation.details.csharp.nounPrefix}${operation.details.csharp.name ? `${operation.details.csharp.noun}_${operation.details.csharp.name}` : operation.details.csharp.noun}`;
 
     const name = `${operation.verb}${variantName}`;
     super(namespace, name, PSCmdlet);

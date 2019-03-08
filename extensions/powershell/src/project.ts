@@ -74,7 +74,9 @@ export class Project extends codeDomProject {
     const smc = await service.GetValue('skip-model-cmdlets');
     this.azure = !!await service.GetValue('azure') || !!await service.GetValue('azure-arm') || false;
     this.skipModelCmdlets = !!smc;
-    this.moduleName = await service.GetValue('module-name') || !!this.azure ? `${model.details.csharp.nounPrefix.replace(/^Az/ig, 'Az.')}` : pascalCase(deconstruct(model.details.default.name.replace(/client/ig, '')));
+    const defaultModuleName = pascalCase(deconstruct(model.details.default.name.replace(/client/ig, '')));
+    const defaultAzureModuleName = !!this.azure ? `Az.${defaultModuleName}` : defaultModuleName;
+    this.moduleName = await service.GetValue('module-name') || !!this.azure ? defaultAzureModuleName : defaultModuleName;
     this.baseFolder = await service.GetValue('base-folder') || '.';
     this.moduleFolder = await service.GetValue('module-folder') || `${this.baseFolder}/generated`;
     this.cmdletFolder = await service.GetValue('cmdlet-folder') || `${this.moduleFolder}/cmdlets`;

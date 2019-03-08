@@ -6,6 +6,7 @@
 import { codemodel, processCodeModel } from '@microsoft.azure/autorest.codemodel-v3';
 import { Host } from '@microsoft.azure/autorest-extension-base';
 import { values, pascalCase, fixLeadingNumber, deconstruct, nameof } from '@microsoft.azure/codegen';
+
 const directivesToFilter = new Set<string>([
   'where-model',
   'where-parameter',
@@ -155,12 +156,13 @@ async function tweakModel(model: codemodel.Model): Promise<codemodel.Model> {
           const replacer = directive['set-name'];
           const newName = getCommandName(operation.verb, nounPrefix, operation.noun).replace(regex, replacer);
           if (isCommandNameLiteral(newName)) {
-            const newNameParts = getCommandNameParts(newName, nounPrefix);
-            operation.details.csharp.noun = newNameParts.noun;
-            operation.details.csharp.verb = newNameParts.verb
+            const newCommandName = getCommandNameParts(newName, nounPrefix);
+            operation.details.csharp.noun = newCommandName.noun;
+            operation.details.csharp.verb = newCommandName.verb;
+            operation.details.csharp.nounPrefix = operation.details.csharp.nounPrefix = newCommandName.prefix;;
           } else {
             throw new Error(`set-name: ${directive['set-name']} value from directive provided is incorrect. 
-                          It should result in a string in the form: /^[a-zA-Z]+-[a-zA-Z]+$/`);
+                          It should result in a valid cmdlet name in the form: /^[a-zA-Z]+-[a-zA-Z]+$/`);
           }
         }
       } else {
@@ -173,11 +175,11 @@ async function tweakModel(model: codemodel.Model): Promise<codemodel.Model> {
           if (isCommandNameLiteral(newName)) {
             const newCommandName = getCommandNameParts(newName, nounPrefix);
             operation.details.csharp.noun = newCommandName.noun;
-            operation.details.csharp.verb = newCommandName.verb
-
+            operation.details.csharp.verb = newCommandName.verb;
+            operation.details.csharp.nounPrefix = newCommandName.prefix;
           } else {
             throw new Error(`set-name: ${directive['set-name']} value from directive provided is incorrect. 
-                            It should result in a string in the form: /^[a-zA-Z]+-[a-zA-Z]+$/`);
+                            It should result in a valid cmdlet name in the form: /^[a-zA-Z]+-[a-zA-Z]+$/`);
           }
         }
       }
@@ -206,8 +208,9 @@ function getCommandName(verb: string, prefix: string, noun: string): string {
 }
 
 
-function getCommandNameParts(command: string, prefix: string): { noun: string, verb: string } {
-  command = command.replace(prefix, '');
+function getCommandNameParts(command: string, prefix: string): { noun: string, verb: string, prefix: string } {
   const parts = command.split('-');
-  return { verb: parts[0], noun: parts[1] };
+  const containsOldPrefix = !!parts[1].match(new RegExp(`^${prefix}`, 'gi'));
+
+  return { verb: parts[0], noun: containsOldPrefix ? parts[1].replace(prefix, '') : parts[1], prefix: containsOldPrefix ? prefix : '' };
 }

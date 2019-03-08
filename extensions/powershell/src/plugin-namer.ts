@@ -58,8 +58,6 @@ async function tweakModel(model: codemodel.Model, service: Host): Promise<codemo
   if (shouldSanitize || isAzure) {
     for (const operation of values(model.commands.operations)) {
       for (const parameter of values(operation.parameters)) {
-        // save previous name as alias
-        parameter.details.csharp.alias = [parameter.details.csharp.name];
         const otherParametersNames = values(operation.parameters)
           .linq.select(each => each.details.csharp.name)
           .linq.where(name => name !== parameter.details.csharp.name)
@@ -72,7 +70,9 @@ async function tweakModel(model: codemodel.Model, service: Host): Promise<codemo
         );
 
         if (parameter.details.csharp.name !== sanitizedName) {
-          service.Message({ Channel: Channel.Information, Text: `Sanitized name -> Changed parameter from ${parameter.details.csharp.name} to ${sanitizedName} from command ${operation.verb}-${operation.noun}` });
+          // save previous name as alias
+          parameter.details.csharp.alias = [parameter.details.csharp.name];
+          service.Message({ Channel: Channel.Information, Text: `Sanitized name -> Changed parameter from ${parameter.details.csharp.name} to ${sanitizedName} from command ${operation.details.csharp.verb}-${operation.details.csharp.nounPrefix}${operation.details.csharp.noun}` });
 
           // sanitize name
           parameter.details.csharp.name = sanitizedName;
