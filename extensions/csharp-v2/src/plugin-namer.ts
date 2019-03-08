@@ -3,15 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { codemodel, JsonType, ModelState, processCodeModel, VirtualProperty } from '@microsoft.azure/autorest.codemodel-v3';
-
-import { camelCase, deconstruct, Dictionary, excludeXDash, fixLeadingNumber, items, keys, length, pascalCase, values, lowest, maximum, minimum } from '@microsoft.azure/codegen';
+import { codemodel, JsonType, ModelState, processCodeModel } from '@microsoft.azure/autorest.codemodel-v3';
+import { camelCase, deconstruct, Dictionary, fixLeadingNumber, length, pascalCase, values, minimum } from '@microsoft.azure/codegen';
 import { System } from '@microsoft.azure/codegen-csharp';
-
 import { Host } from '@microsoft.azure/autorest-extension-base';
 import { Schema, SchemaDetails } from './code-model';
 import { SchemaDefinitionResolver } from './schema/schema-resolver';
-import * as semver from "semver";
 
 export async function csnamer(service: Host) {
   return processCodeModel(nameStuffRight, service);
