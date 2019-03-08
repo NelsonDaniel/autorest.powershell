@@ -77,7 +77,6 @@ export class Project extends codeDomProject {
     this.moduleName = await service.GetValue('module-name') || !!this.azure ? `${model.details.csharp.nounPrefix.replace(/^Az/ig, 'Az.')}` : pascalCase(deconstruct(model.details.default.name.replace(/client/ig, '')));
     this.baseFolder = await service.GetValue('base-folder') || '.';
     this.moduleFolder = await service.GetValue('module-folder') || `${this.baseFolder}/generated`;
-    this.moduleFolder = await service.GetValue('module-folder') || './generated';
     this.cmdletFolder = await service.GetValue('cmdlet-folder') || `${this.moduleFolder}/cmdlets`;
     this.modelCmdletFolder = await service.GetValue('model-cmdlet-folder') || `${this.moduleFolder}/model-cmdlets`;
     this.customFolder = await service.GetValue('custom-cmdlet-folder') || `${this.baseFolder}/custom`;
