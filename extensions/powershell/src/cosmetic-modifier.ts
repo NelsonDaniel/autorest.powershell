@@ -14,7 +14,6 @@ const directivesToFilter = new Set<string>([
 ]);
 
 let directives: Array<any> = [];
-let nounPrefix = '';
 
 interface WhereParameterDirective {
   'where-parameter': string;
@@ -65,8 +64,6 @@ export async function cosmeticModifier(service: Host) {
       .linq.where(key => directivesToFilter.has(key))
       .linq.any(each => !!each))
     .linq.toArray();
-  const azure = await service.GetValue('azure') || await service.GetValue('azure-arm') || false;
-  nounPrefix = await service.GetValue('noun-prefix') || azure ? 'Az' : ``;
   return processCodeModel(tweakModel, service);
 }
 
@@ -149,32 +146,34 @@ async function tweakModel(model: codemodel.Model): Promise<codemodel.Model> {
       const whereCommandValue = directive['where-command'];
       const isRegex = !isCommandNameLiteral(directive['where-command']);
       if (isRegex) {
+        const nounPrefix = model.details.csharp.nounPrefix;
         const regex = new RegExp(whereCommandValue);
         const operations = values(model.commands.operations)
-          .linq.where(operation => !!`${operation.verb}-${nounPrefix}${operation.noun}`.match(regex))
+          .linq.where(operation => !!`${operation.details.csharp.verb}-${nounPrefix}${operation.details.csharp.noun}`.match(regex))
           .linq.toArray();
         for (const operation of operations) {
           const replacer = directive['set-name'];
           const newName = getCommandName(operation.verb, nounPrefix, operation.noun).replace(regex, replacer);
           if (isCommandNameLiteral(newName)) {
             const newNameParts = getCommandNameParts(newName, nounPrefix);
-            operation.noun = newNameParts.noun;
-            operation.verb = newNameParts.verb
+            operation.details.csharp.noun = newNameParts.noun;
+            operation.details.csharp.verb = newNameParts.verb
           } else {
             throw new Error(`set-name: ${directive['set-name']} value from directive provided is incorrect. 
                           It should result in a string in the form: /^[a-zA-Z]+-[a-zA-Z]+$/`);
           }
         }
       } else {
+        const nounPrefix = model.details.csharp.nounPrefix;
         const operations = values(model.commands.operations)
-          .linq.where(operation => `${operation.verb}-${nounPrefix}${operation.noun}`.toLowerCase() === whereCommandValue.toLowerCase())
+          .linq.where(operation => `${operation.details.csharp.verb}-${nounPrefix}${operation.details.csharp.noun}`.toLowerCase() === whereCommandValue.toLowerCase())
           .linq.toArray();
         for (const operation of operations) {
           const newName = getCommandName(operation.verb, nounPrefix, operation.noun).replace(whereCommandValue, directive['set-name']);
           if (isCommandNameLiteral(newName)) {
             const newCommandName = getCommandNameParts(newName, nounPrefix);
-            operation.noun = newCommandName.noun;
-            operation.verb = newCommandName.verb
+            operation.details.csharp.noun = newCommandName.noun;
+            operation.details.csharp.verb = newCommandName.verb
 
           } else {
             throw new Error(`set-name: ${directive['set-name']} value from directive provided is incorrect. 

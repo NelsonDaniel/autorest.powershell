@@ -54,13 +54,13 @@ async function tweakModel(model: codemodel.Model, service: Host): Promise<codemo
   visited.clear();
   if (isAzure) {
     // tweak names for PS
-    for (const operations of values(model.commands.operations)) {
-      for (const parameter of values(operations.parameters)) {
+    for (const operation of values(model.commands.operations)) {
+      for (const parameter of values(operation.parameters)) {
 
         const Name = 'Name';
-        const parameterNamesLowerCase = operations.parameters.map(each => each.name.toLowerCase());
+        const parameterNamesLowerCase = operation.parameters.map(each => each.name.toLowerCase());
         // resource name for resource matching cmdlet verb should be 'Name'
-        if ((operations.noun + Name).toLowerCase() === parameter.details.csharp.name.toLowerCase() && !parameterNamesLowerCase.includes(Name.toLocaleLowerCase())) {
+        if ((operation.details.csharp.noun + Name).toLowerCase() === parameter.details.csharp.name.toLowerCase() && !parameterNamesLowerCase.includes(Name.toLocaleLowerCase())) {
           // save previous name as alias
           parameter.details.csharp.alias = [parameter.details.csharp.name];
 

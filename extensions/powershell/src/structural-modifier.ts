@@ -21,7 +21,6 @@ interface HideCommandDirective {
 }
 
 let directives: Array<any> = [];
-let nounPrefix = '';
 
 export async function structuralModifier(service: Host) {
   directives = values(await service.GetValue('directive'))
@@ -29,8 +28,6 @@ export async function structuralModifier(service: Host) {
       .linq.where(key => directivesToFilter.has(key))
       .linq.any(each => !!each))
     .linq.toArray();
-  const azure = await service.GetValue('azure') || await service.GetValue('azure-arm') || false;
-  nounPrefix = await service.GetValue('noun-prefix') || azure ? 'Az' : ``;
   return processCodeModel(tweakModel, service);
 }
 
@@ -48,16 +45,17 @@ async function tweakModel(model: codemodel.Model, service: Host): Promise<codemo
 
     if (isRemoveCommandDirective(directive)) {
       const removeCommandVal = directive['remove-command'];
+      const nounPrefix = model.details.default.nounPrefix;
 
       for (const [key, operation] of Object.entries(model.commands.operations)) {
         const isRegex = !isCommandNameLiteral(removeCommandVal);
         if (isRegex) {
           const regex = new RegExp(removeCommandVal);
-          if (`${operation.verb}-${nounPrefix}${operation.noun}`.match(regex)) {
+          if (`${operation.details.csharp.verb}-${nounPrefix}${operation.details.csharp.noun}`.match(regex)) {
             delete model.commands.operations[key];
           }
         } else {
-          if (`${operation.verb}-${nounPrefix}${operation.noun}`.toLowerCase() === removeCommandVal.toLowerCase()) {
+          if (`${operation.details.csharp.verb}-${nounPrefix}${operation.details.csharp.noun}`.toLowerCase() === removeCommandVal.toLowerCase()) {
             delete model.commands.operations[key];
           }
         }
@@ -68,16 +66,17 @@ async function tweakModel(model: codemodel.Model, service: Host): Promise<codemo
 
     if (isHideCommandDirective(directive)) {
       const hideCommandVal = directive['hide-command'];
+      const nounPrefix = model.details.default.nounPrefix;
 
       for (const [key, operation] of Object.entries(model.commands.operations)) {
         const isRegex = !isCommandNameLiteral(hideCommandVal);
         if (isRegex) {
           const regex = new RegExp(hideCommandVal);
-          if (`${operation.verb}-${nounPrefix}${operation.noun}`.match(regex)) {
+          if (`${operation.details.csharp.verb}-${nounPrefix}${operation.details.csharp.noun}`.match(regex)) {
             model.commands.operations[key].details.csharp.hideDirective = hideCommandVal;
           }
         } else {
-          if (`${operation.verb}-${nounPrefix}${operation.noun}`.toLowerCase() === hideCommandVal.toLowerCase()) {
+          if (`${operation.details.csharp.verb}-${nounPrefix}${operation.details.csharp.noun}`.toLowerCase() === hideCommandVal.toLowerCase()) {
             model.commands.operations[key].details.csharp.hideDirective = hideCommandVal;;
           }
         }

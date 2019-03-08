@@ -46,6 +46,11 @@ async function commandCreator(model: codemodel.Model, service: Host): Promise<co
   // check to see if there are already operations in the configuration that we should load
   // and check to see if we should infer new operations
 
+  // figure out the prefix. Since we use the same prefix everywhere, we place it at the top level.
+  const isAzure = !!await service.GetValue('azure') || !!await service.GetValue('azure-arm') || false;
+  const nounPrefix = await service.GetValue('noun-prefix') || isAzure ? `Az${pascalCase(deconstruct(model.details.default.name)).replace(/ManagementClient$/ig, '')}` : ``;
+  model.details.default.nounPrefix = nounPrefix;
+
   // perform the detection
   model = await detect(model, service);
   return model;
@@ -142,7 +147,9 @@ async function addCommandOperation(vname: string, parameters: Array<http.HttpOpe
       ...operation.details,
       csharp: {
         ...operation.details.default,
-        name: vname
+        name: vname,
+        verb: variant.verb,
+        noun: variant.noun,
       }
     },
     operationId: operation.operationId,
