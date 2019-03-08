@@ -33,7 +33,6 @@ export class Project extends codeDomProject {
   public schemaDefinitionResolver: SchemaDefinitionResolver;
   public maxInlinedParameters!: number;
   public skipModelCmdlets!: boolean;
-  public nounPrefix!: string;
   public projectNamespace: string;
   public overrides: Dictionary<string>;
   public get model() { return this.state.model; }
@@ -66,17 +65,13 @@ export class Project extends codeDomProject {
     const service = this.state.service;
     const model = this.state.model;
     const state = this.state;
-
     const mil = await service.GetValue('max-inlined-parameters');
     this.maxInlinedParameters = typeof mil === 'number' ? mil : 4;
 
     const smc = await service.GetValue('skip-model-cmdlets');
+    this.azure = !!await service.GetValue('azure') || !!await service.GetValue('azure-arm') || false;
     this.skipModelCmdlets = smc ? true : false;
-
-    this.azure = await service.GetValue('azure') || await service.GetValue('azure-arm') || false;
-
-    this.moduleName = await service.GetValue('module-name') || pascalCase(deconstruct(model.info.title.replace(/client/ig, '')));
-
+    this.moduleName = await service.GetValue('module-name') || !!this.azure ? `${model.details.csharp.nounPrefix.replace(/^Az/ig, 'Az.')}` : pascalCase(deconstruct(model.details.default.name.replace(/client/ig, '')));
     this.moduleFolder = await service.GetValue('module-folder') || './generated';
     this.cmdletFolder = await service.GetValue('cmdlet-folder') || `${this.moduleFolder}/cmdlets`;
     this.modelCmdletFolder = await service.GetValue('model-cmdlet-folder') || `${this.moduleFolder}/model-cmdlets`;
@@ -87,29 +82,27 @@ export class Project extends codeDomProject {
     this.apiExtensionsFolder = await service.GetValue('api-extensions-folder') || `${this.moduleFolder}/api-extensions`;
     this.binFolder = await service.GetValue('bin-folder') || `./bin`;
     this.exportsFolder = await service.GetValue('exports-folder') || `./exports`;
-
     this.csproj = await service.GetValue('csproj') || `${this.moduleName}.private.csproj`;
     this.dll = await service.GetValue('dll') || `${this.binFolder}/${this.moduleName}.private.dll`;
     this.psd1 = await service.GetValue('psd1') || `${this.moduleName}.psd1`;
     this.psm1 = await service.GetValue('psm1') || `${this.moduleName}.psm1`;
     this.psm1Custom = await service.GetValue('psm1-custom') || `${this.customFolder}/${this.moduleName}.custom.psm1`;
 
-    this.nounPrefix = await service.GetValue('noun-prefix') || this.azure ? 'Az' : ``;
-
     // add project namespace
     this.addNamespace(this.serviceNamespace = new ServiceNamespace(state));
     this.addNamespace(this.supportNamespace = new SupportNamespace(this.serviceNamespace, state));
     this.addNamespace(this.modelCmdlets = new ModelCmdletNamespace(this.serviceNamespace, state));
+
     // add cmdlet namespace
     this.addNamespace(this.cmdlets = new CmdletNamespace(this.serviceNamespace, state));
     this.addNamespace(this.modelsExtensions = new ModelExtensionsNamespace(this.serviceNamespace, <any>state.model.schemas, state.path('components', 'schemas')));
-
     if (!this.skipModelCmdlets) {
       this.modelCmdlets.createModelCmdlets();
     }
 
     // abort now if we have any errors.
     state.checkpoint();
+
     return this;
   }
 
