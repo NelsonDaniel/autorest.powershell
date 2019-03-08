@@ -112,7 +112,7 @@ export class Remodeler {
       // they have a properties, but didn't say type: object.
       type = OpenAPI.JsonType.Object;
       this.modelState.warning(
-        `The schema '${name}' with an undefined type and decalared properties is a bit ambigious. This has been auto-corrected to 'type:object'`,
+        `The schema '${name}' with an undefined type and declared properties is a bit ambiguous. This has been auto-corrected to 'type:object'`,
         [`UndefinedTypeWithSchema`],
         /* todo: find source location for this node */
       );
@@ -121,7 +121,7 @@ export class Remodeler {
       // they have a properties, but didn't say type: object.
       type = OpenAPI.JsonType.Object;
       this.modelState.warning(
-        `The schema '${name}' with an undefined type and additionalProperties is a bit ambigious. This has been auto-corrected to 'type:object'`,
+        `The schema '${name}' with an undefined type and additionalProperties is a bit ambiguous. This has been auto-corrected to 'type:object'`,
         [`UndefinedTypeWithSchema`],
         /* todo: find source location for this node */
       );
@@ -130,7 +130,7 @@ export class Remodeler {
     if (type === undefined && original.allOf) {
       type = OpenAPI.JsonType.Object;
       this.modelState.warning(
-        `The schema '${name}' with a undefined type and using allOf is a bit ambigious. This has been auto-corrected to 'type:object'`,
+        `The schema '${name}' with a undefined type and using allOf is a bit ambiguous. This has been auto-corrected to 'type:object'`,
         [`UndefinedTypeWithSchema`],
         /* todo: find source location for this node */
       );
